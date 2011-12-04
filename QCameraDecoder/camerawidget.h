@@ -6,7 +6,8 @@
 
 #include <QCamera>
 #include <QCameraImageCapture>
-
+#include <QCameraImageCaptureControl>
+#include <QCameraFocus>
 //QTM_USE_NAMESPACE
 
 #include <QMediaService>
@@ -43,6 +44,7 @@ protected slots:
     void imageCaptured(int, const QImage &);
 private:
     void captureImage();
+    void setCameraFocus();
 private:
 
     QWidget *m_videoWidget;
@@ -55,6 +57,8 @@ private:
     bool m_pictureCaptured;
     bool m_showViewFinder;
     QCamera *m_camera;
+    QCameraFocus *m_cameraFocus;
+    QCameraFocus::FocusMode m_focusModel;
     QCameraImageCapture *m_stillImageCapture;
     CameraVideoSurface *m_videoSurface;
 //    QSystemScreenSaver *m_systemScreenSaver;

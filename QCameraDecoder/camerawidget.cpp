@@ -123,13 +123,17 @@ void CameraWidget::enableCamera()
     connect(m_camera, SIGNAL(lockFailed()),
             this, SLOT(lockFailed()));
     connect(m_camera, SIGNAL(locked()), this, SLOT(locked()));
-    QMediaService* ms = m_camera->service();
-    QVideoRendererControl* vrc = ms->requestControl<QVideoRendererControl*>();
+    QMediaService *ms = m_camera->service();
+    QVideoRendererControl *vrc = ms->requestControl<QVideoRendererControl*>();
     m_videoSurface = new CameraVideoSurface(this,this,this);
     vrc->setSurface(m_videoSurface);
 
+    m_cameraFocus = m_camera->focus();
+    setCameraFocus();
+    m_cameraFocus->setFocusMode(m_focusModel);
+
     m_stillImageCapture = new QCameraImageCapture(m_camera);
-    connect(m_stillImageCapture, SIGNAL(imageCaptured(int,QImage)), this, SLOT(imageCaptured(int,QImage)));
+    connect(m_stillImageCapture, SIGNAL(imageCaptured(int, QImage)), this, SLOT(imageCaptured(int, QImage)));
 
     if (m_camera->state() == QCamera::ActiveState) {
         m_camera->stop();
@@ -137,6 +141,35 @@ void CameraWidget::enableCamera()
     m_videoWidget->show();
     m_camera->start();
     m_showViewFinder = true;
+}
+
+void CameraWidget::setCameraFocus ()
+{
+    if (!m_cameraFocus)
+        return;
+    if (m_cameraFocus->isFocusModeSupported(QCameraFocus::MacroFocus)) {
+        m_focusModel = QCameraFocus::MacroFocus;
+        return;
+    }
+    if (m_cameraFocus->isFocusModeSupported(QCameraFocus::HyperfocalFocus)) {
+        m_focusModel = QCameraFocus::HyperfocalFocus;
+        return;
+    }
+    if (m_cameraFocus->isFocusModeSupported(QCameraFocus::InfinityFocus)) {
+        m_focusModel = QCameraFocus::InfinityFocus;
+        return;
+    }
+    if (m_cameraFocus->isFocusModeSupported(QCameraFocus::ContinuousFocus)) {
+        m_focusModel = QCameraFocus::ContinuousFocus;
+        return;
+    }
+    if (m_cameraFocus->isFocusModeSupported(QCameraFocus::AutoFocus)) {
+        m_focusModel = QCameraFocus::AutoFocus;
+        return;
+    } else {
+        m_focusModel = QCameraFocus::ManualFocus;
+        return;
+    }
 }
 
 void CameraWidget::error(QCamera::Error e)

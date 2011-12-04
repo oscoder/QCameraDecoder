@@ -32,11 +32,15 @@ public:
                 QAbstractVideoBuffer::HandleType handleType = QAbstractVideoBuffer::NoHandle) const;
 
     void paint(QPainter*);
-
+private:
+    QImage scaleImage(const QImage & srcImage)const;
 private:
     QWidget* m_targetWidget;
     VideoIF* m_target;
     QVideoFrame m_frame;
+    int frWidth;
+    int frHeight;
+    QImage m_completeImage;
     QImage::Format m_imageFormat;
     QVideoSurfaceFormat m_videoFormat;
 };

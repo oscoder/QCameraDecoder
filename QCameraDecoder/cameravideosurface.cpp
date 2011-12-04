@@ -1,10 +1,12 @@
 #include "cameravideosurface.h"
 
-#include <QWidget>
 #include "videoif.h"
-#include <QObject>
-#include <QPainter>
-#include <QImage>
+
+#include <QtCore/QObject>
+
+#include <QtGui/QImage>
+#include <QtGui/QPainter>
+#include <QtGui/QWidget>
 
 CameraVideoSurface::CameraVideoSurface(QWidget *widget, VideoIF *target, QObject *parent)
     : QAbstractVideoSurface(parent)
@@ -42,9 +44,39 @@ bool CameraVideoSurface::present (const QVideoFrame &frame)
         stop();
         return false;
     } else {
+        m_frame.map(QAbstractVideoBuffer::ReadOnly);
+        frWidth = m_frame.width();
+        frHeight = m_frame.height();
+        int line = m_frame.bytesPerLine();
+        // build QImage from frame
+        m_completeImage = QImage(
+                    m_frame.bits(),
+                    frWidth, frHeight,
+                    line,
+                    m_frame.imageFormatFromPixelFormat(m_frame.pixelFormat()));
+        m_frame.unmap();
+
+        QImage dstImage = scaleImage(m_completeImage);
+
+        m_frame = QVideoFrame(dstImage);
+
+        // enlarge faces
         m_target->updateVideo();
         return true;
     }
+}
+
+QImage CameraVideoSurface::scaleImage(const QImage & srcImage)const
+{
+    QImage dstImage = srcImage.copy((frWidth - (frWidth/3))/2, (frHeight - (frHeight/3))/2,
+                                    frWidth/3, frHeight/3);
+    if(320 < frWidth || 240 < frHeight){
+        if(frWidth > frHeight)
+            dstImage = dstImage.scaledToWidth(320, Qt::SmoothTransformation);
+        else
+            dstImage = srcImage.scaledToHeight(240, Qt::SmoothTransformation);
+    }
+    return dstImage;
 }
 
 void CameraVideoSurface::paint (QPainter *painter)
